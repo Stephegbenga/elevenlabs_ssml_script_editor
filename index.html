@@ -1,11 +1,12 @@
-l
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ElevenLabs Script Editor</title>
-    <!-- Google tag (gtag.js) -->
+    <title>Universal SSML Script Editor | For ElevenLabs, Microsoft Azure, Google Cloud, AWS Polly & more</title>
+    <meta name="description" content="A powerful and user-friendly online editor to create, edit, and manage SSML (Speech Synthesis Markup Language) scripts for any text-to-speech service, including AWS Polly, Google Cloud, Microsoft Azure, and ElevenLabs.">
+    <meta name="keywords" content="SSML editor, SSML, Speech Synthesis Markup Language, text-to-speech, TTS, AWS Polly, Google Cloud Text-to-Speech, Microsoft Azure, ElevenLabs, voice synthesis, script editor, thatool.online">
+   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-72S6ZGE90C"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -13,7 +14,7 @@ l
   gtag('js', new Date());
 
   gtag('config', 'G-72S6ZGE90C');
-</script>
+</script>   
     <style>
         * {
             margin: 0;
@@ -50,9 +51,33 @@ l
             font-weight: 700;
         }
 
-        .header p {
+        .header .main-subtitle {
             opacity: 0.9;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .header .service-list {
+            opacity: 0.8;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+        
+        .support-email {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .support-email a {
+            color: white;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+            transition: border-bottom-color 0.2s ease;
+        }
+
+        .support-email a:hover {
+            border-bottom-color: white;
         }
 
         .main-content {
@@ -504,8 +529,12 @@ l
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎙️ ElevenLabs SSML Script Editor Also works for: google, microsoft, aws</h1>
-            <p>Write naturally, we'll handle the technical stuff automatically</p>
+            <h1>🎙️ Universal SSML Script Editor</h1>
+            <p class="main-subtitle">Craft realistic, expressive voiceovers for your AI audio.</p>
+            <p class="service-list">For ElevenLabs, Microsoft Azure, Google Cloud, AWS Polly, and any other text-to-speech service that uses SSML.</p>
+            <div class="support-email">
+                Support: <a href="mailto:ssml-support@thatool.online.com">ssml-support@thatool.online.com</a>
+            </div>
         </div>
 
         <div class="main-content">
@@ -518,7 +547,7 @@ l
                     <h4>💡 How to Use:</h4>
                     <p>• Write your script naturally in the text area below</p>
                     <p>• Select text and use the toolbar controls to adjust volume, speed, pitch, and add pauses</p>
-                    <p>• The technical SSML code is generated automatically - you don't need to see it!</p>
+                    <p>• The technical SSML code is generated automatically. Copy it for use with any TTS provider!</p>
                 </div>
 
                 <div class="script-container">
@@ -573,14 +602,16 @@ l
                         <pre id="previewContent"></pre>
                     </div>
                     
-                    <div style="padding: 15px 20px; border-top: 1px solid #e5e7eb;">
+                    <div style="padding: 15px 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <div class="preview-toggle" id="showPreview">
                             ▶ Show Technical Preview (Optional)
                         </div>
+                        <button id="copySmmlBtn" class="toolbar-btn">📋 Copy SSML Code</button>
                     </div>
                 </div>
 
                 <div class="button-group">
+                    <button id="arrangeBtn" class="btn btn-secondary">✨ Auto-Arrange Script</button>
                     <button id="exportBtn" class="btn btn-secondary">📁 Export Project</button>
                     <button id="importBtn" class="btn btn-secondary">📂 Import Project</button>
                     <button id="clearBtn" class="btn btn-secondary">🗑️ Clear All</button>
@@ -594,7 +625,7 @@ l
                 </div>
 
                 <div class="api-config">
-                    <h3>🔑 API Configuration</h3>
+                    <h3>🧪 Test with ElevenLabs API</h3>
                     <div class="control-group">
                         <label class="control-label">ElevenLabs API Key</label>
                         <input type="password" id="apiKey" class="control-input" placeholder="Enter your API key">
@@ -700,6 +731,7 @@ l
         const voiceIdInput = document.getElementById('voiceId');
         
         // Button elements
+        const arrangeBtn = document.getElementById('arrangeBtn');
         const exportBtn = document.getElementById('exportBtn');
         const importBtn = document.getElementById('importBtn');
         const clearBtn = document.getElementById('clearBtn');
@@ -708,6 +740,7 @@ l
         const apiStatus = document.getElementById('apiStatus');
         const audioContainer = document.getElementById('audioContainer');
         const audioPlayer = document.getElementById('audioPlayer');
+        const copySmmlBtn = document.getElementById('copySmmlBtn');
         
         let observer;
         const tagRegex = /(\[(?:VOLUME|SPEED|PITCH|EMPHASIS|WHISPER|PAUSE)[^\]]*?\]|\[\/(?:VOLUME|SPEED|PITCH|EMPHASIS|WHISPER)\])/gi;
@@ -729,9 +762,9 @@ l
 
         // Load a sample script to get users started
         function loadSampleScript() {
-            const sampleScript = `Welcome to ElevenLabs! 
+            const sampleScript = `Welcome to the Universal SSML Editor!
 
-This is your script editor where you can write naturally and easily control how your voice sounds.
+This is your script editor where you can write naturally and easily control how your voice sounds using SSML.
 
 Try selecting some text and using the toolbar buttons above to make it louder, softer, faster, slower, or even [WHISPER]whispered![/WHISPER]
 
@@ -751,7 +784,7 @@ You can also add pauses [PAUSE 1s] to make your speech sound more natural.`;
         }
 
         function updateEditorFromScript() {
-            observer.disconnect();
+            if (observer) observer.disconnect();
             const parts = currentConfig.script.split(tagRegex);
             scriptEditor.innerHTML = '';
             const openTagsStack = [];
@@ -798,7 +831,7 @@ You can also add pauses [PAUSE 1s] to make your speech sound more natural.`;
                     });
                 }
             });
-            observer.observe(scriptEditor, { childList: true });
+            if (observer) observer.observe(scriptEditor, { childList: true });
         }
         
         function updateScriptFromEditor() {
@@ -850,11 +883,13 @@ You can also add pauses [PAUSE 1s] to make your speech sound more natural.`;
             apiKeyInput.addEventListener('input', (e) => { currentConfig.apiKey = e.target.value; updateApiStatus(); });
             voiceIdInput.addEventListener('input', (e) => { currentConfig.voiceId = e.target.value; updateApiStatus(); });
 
+            arrangeBtn.addEventListener('click', autoArrangeScript);
             exportBtn.addEventListener('click', exportProject);
             importBtn.addEventListener('click', () => importFile.click());
             clearBtn.addEventListener('click', clearAll);
             importFile.addEventListener('change', importProject);
             generateBtn.addEventListener('click', generateAudio);
+            copySmmlBtn.addEventListener('click', copySmmlToClipboard);
         }
 
         function handleToolbarAction(e) {
@@ -873,7 +908,7 @@ You can also add pauses [PAUSE 1s] to make your speech sound more natural.`;
                 const range = selection.getRangeAt(0);
                 range.deleteContents();
 
-                const pauseText = ` [PAUSE ${duration}] `;
+                const pauseText = `[PAUSE ${duration}]`;
                 const pauseNode = createTagSpan(pauseText);
                 range.insertNode(pauseNode);
 
@@ -1023,6 +1058,58 @@ You can also add pauses [PAUSE 1s] to make your speech sound more natural.`;
             
             currentConfig.ssmlScript = ssml;
             previewContent.textContent = ssml;
+        }
+
+        function copySmmlToClipboard() {
+            if (!currentConfig.ssmlScript) {
+                showToast('No SSML code to copy!', 'error');
+                return;
+            }
+            const textArea = document.createElement('textarea');
+            textArea.value = currentConfig.ssmlScript;
+            textArea.style.position = 'fixed';
+            textArea.style.top = 0;
+            textArea.style.left = 0;
+            textArea.style.width = '2em';
+            textArea.style.height = '2em';
+            textArea.style.padding = 0;
+            textArea.style.border = 'none';
+            textArea.style.outline = 'none';
+            textArea.style.boxShadow = 'none';
+            textArea.style.background = 'transparent';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('SSML code copied to clipboard!', 'success');
+                } else {
+                    showToast('Failed to copy SSML code.', 'error');
+                }
+            } catch (err) {
+                showToast('Error copying SSML code.', 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function autoArrangeScript() {
+            let script = currentConfig.script;
+
+            // Place each pause tag on its own line, surrounded by newlines
+            script = script.replace(/(\[PAUSE\s+[^\]]+\])/g, '\n$1\n');
+
+            // Split into lines, trim each line, and filter out any empty lines that might have been created
+            const lines = script.split('\n')
+                                .map(line => line.trim())
+                                .filter(line => line.length > 0);
+
+            // Join the cleaned lines back together with a single newline
+            const formattedScript = lines.join('\n');
+
+            currentConfig.script = formattedScript;
+            updateEditorFromScript();
+            showToast('✨ Script auto-arranged!', 'success');
         }
 
         function updateSliderDisplay(type, value) {
