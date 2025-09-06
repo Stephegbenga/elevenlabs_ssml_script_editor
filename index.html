@@ -1,0 +1,1220 @@
+l
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElevenLabs Script Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .editor-section {
+            padding: 30px;
+            background: #fafafa;
+        }
+
+        .controls-section {
+            padding: 30px;
+            background: white;
+            border-left: 1px solid #e5e7eb;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border-radius: 2px;
+        }
+
+        .script-container {
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .script-toolbar {
+            background: #f8fafc;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 15px 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-right: 20px;
+        }
+
+        .toolbar-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6b7280;
+            margin-right: 5px;
+        }
+
+        .toolbar-btn {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .toolbar-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+
+        .toolbar-btn.active {
+            background: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+
+        .toolbar-select {
+            padding: 4px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            background: white;
+        }
+
+        .script-editor {
+            width: 100%;
+            height: 400px;
+            border: none;
+            padding: 20px;
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: vertical;
+            background: white;
+            outline: none;
+            overflow-y: auto;
+        }
+
+        .script-editor[data-placeholder]:empty:before {
+            content: attr(data-placeholder);
+            color: #a0aec0;
+            pointer-events: none;
+        }
+
+        .script-editor .tag {
+            background-color: #ede9fe;
+            color: #5b21b6;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 0.85em;
+            font-weight: 600;
+            white-space: nowrap;
+            display: inline-block;
+            margin: 0 2px;
+            user-select: none;
+        }
+
+        .script-preview {
+            background: #f8fafc;
+            border-top: 1px solid #e5e7eb;
+            padding: 15px 20px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #6b7280;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .preview-toggle {
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #4f46e5;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .control-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .control-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .slider-container {
+            position: relative;
+            margin: 10px 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .slider-value {
+            text-align: center;
+            font-weight: 600;
+            color: #4f46e5;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: #4f46e5;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .api-config {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .api-config h3 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status-connected {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-disconnected {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .audio-player {
+            width: 100%;
+            margin-top: 15px;
+            border-radius: 8px;
+        }
+
+        .loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff40;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background: #10b981;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        .help-panel {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .help-panel h4 {
+            color: #1e40af;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .help-panel p {
+            font-size: 0.85rem;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-section {
+                border-left: none;
+                border-top: 1px solid #e5e7eb;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                margin: 10px;
+                border-radius: 12px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .editor-section,
+            .controls-section {
+                padding: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .toolbar-group {
+                margin-right: 10px;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎙️ ElevenLabs SSML Script Editor Also works for: google, microsoft, aws</h1>
+            <p>Write naturally, we'll handle the technical stuff automatically</p>
+        </div>
+
+        <div class="main-content">
+            <div class="editor-section">
+                <div class="section-title">
+                    ✍️ Write Your Script
+                </div>
+                
+                <div class="help-panel">
+                    <h4>💡 How to Use:</h4>
+                    <p>• Write your script naturally in the text area below</p>
+                    <p>• Select text and use the toolbar controls to adjust volume, speed, pitch, and add pauses</p>
+                    <p>• The technical SSML code is generated automatically - you don't need to see it!</p>
+                </div>
+
+                <div class="script-container">
+                    <div class="script-toolbar">
+                        <div class="toolbar-group">
+                            <span class="toolbar-label">Volume:</span>
+                            <button class="toolbar-btn" data-action="volume" data-value="soft">🔉 Soft</button>
+                            <button class="toolbar-btn" data-action="volume" data-value="medium">🔊 Normal</button>
+                            <button class="toolbar-btn" data-action="volume" data-value="loud">📢 Loud</button>
+                        </div>
+                        
+                        <div class="toolbar-group">
+                            <span class="toolbar-label">Speed:</span>
+                            <button class="toolbar-btn" data-action="speed" data-value="x-slow">🐌 Very Slow</button>
+                            <button class="toolbar-btn" data-action="speed" data-value="slow">🚶 Slow</button>
+                            <button class="toolbar-btn" data-action="speed" data-value="medium">🏃 Normal</button>
+                            <button class="toolbar-btn" data-action="speed" data-value="fast">🏃‍♂️ Fast</button>
+                        </div>
+                        
+                        <div class="toolbar-group">
+                            <span class="toolbar-label">Pitch:</span>
+                            <button class="toolbar-btn" data-action="pitch" data-value="-20%">⬇️ Lower</button>
+                            <button class="toolbar-btn" data-action="pitch" data-value="+0%">➡️ Normal</button>
+                            <button class="toolbar-btn" data-action="pitch" data-value="+20%">⬆️ Higher</button>
+                        </div>
+                        
+                        <div class="toolbar-group">
+                            <span class="toolbar-label">Effects:</span>
+                            <button class="toolbar-btn" data-action="emphasis">💪 Emphasize</button>
+                            <button class="toolbar-btn" data-action="whisper">🤫 Whisper</button>
+                        </div>
+                        
+                        <div class="toolbar-group">
+                            <span class="toolbar-label">Pause:</span>
+                            <select class="toolbar-select" id="pauseSelect">
+                                <option value="">Add Pause</option>
+                                <option value="0.5s">Short (0.5s)</option>
+                                <option value="1s">Medium (1s)</option>
+                                <option value="2s">Long (2s)</option>
+                                <option value="3s">Extra Long (3s)</option>
+                                <option value="custom">Custom...</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="scriptEditor" class="script-editor" contenteditable="true" data-placeholder="Start typing your script here..."></div>
+                    
+                    <div class="script-preview" id="scriptPreview" style="display: none;">
+                        <div class="preview-toggle" id="previewToggle">
+                            ▼ Hide Technical Preview
+                        </div>
+                        <pre id="previewContent"></pre>
+                    </div>
+                    
+                    <div style="padding: 15px 20px; border-top: 1px solid #e5e7eb;">
+                        <div class="preview-toggle" id="showPreview">
+                            ▶ Show Technical Preview (Optional)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button id="exportBtn" class="btn btn-secondary">📁 Export Project</button>
+                    <button id="importBtn" class="btn btn-secondary">📂 Import Project</button>
+                    <button id="clearBtn" class="btn btn-secondary">🗑️ Clear All</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="section-title">
+                    🎛️ Voice Settings
+                </div>
+
+                <div class="api-config">
+                    <h3>🔑 API Configuration</h3>
+                    <div class="control-group">
+                        <label class="control-label">ElevenLabs API Key</label>
+                        <input type="password" id="apiKey" class="control-input" placeholder="Enter your API key">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Voice ID</label>
+                        <input type="text" id="voiceId" class="control-input" placeholder="Enter voice ID">
+                    </div>
+                    <div id="apiStatus" class="status-indicator status-disconnected">
+                        ❌ API Not Connected
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">AI Model</label>
+                    <select id="model" class="control-input">
+                        <option value="eleven_multilingual_v2">Multilingual V2 (Recommended)</option>
+                        <option value="eleven_monolingual_v1">Monolingual V1</option>
+                        <option value="eleven_multilingual_v1">Multilingual V1</option>
+                        <option value="eleven_turbo_v2">Turbo V2 (Faster)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Voice Stability</label>
+                    <div class="slider-container">
+                        <input type="range" id="stability" class="slider" min="0" max="1" step="0.01" value="0.5">
+                        <div id="stabilityValue" class="slider-value">0.50</div>
+                    </div>
+                    <small style="color: #6b7280;">Lower = more expressive, Higher = more consistent</small>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Voice Similarity</label>
+                    <div class="slider-container">
+                        <input type="range" id="similarity" class="slider" min="0" max="1" step="0.01" value="0.75">
+                        <div id="similarityValue" class="slider-value">0.75</div>
+                    </div>
+                    <small style="color: #6b7280;">How much to keep the original voice character</small>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Style Enhancement</label>
+                    <div class="slider-container">
+                        <input type="range" id="style" class="slider" min="0" max="1" step="0.01" value="0.5">
+                        <div id="styleValue" class="slider-value">0.50</div>
+                    </div>
+                    <small style="color: #6b7280;">Makes the voice sound more natural and expressive</small>
+                </div>
+
+                <div class="control-group">
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="speakerBoost" class="checkbox" checked>
+                        <label for="speakerBoost" class="control-label">Clear Voice Boost</label>
+                    </div>
+                    <small style="color: #6b7280;">Makes the voice clearer and more present</small>
+                </div>
+
+                <div class="button-group">
+                    <button id="generateBtn" class="btn btn-primary" disabled>
+                        🎵 Generate Audio
+                    </button>
+                </div>
+
+                <div id="audioContainer" style="display: none;">
+                    <audio id="audioPlayer" class="audio-player" controls></audio>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let currentConfig = {
+            script: '',
+            ssmlScript: '',
+            voiceSettings: {
+                stability: 0.5,
+                similarity_boost: 0.75,
+                style: 0.5,
+                use_speaker_boost: true
+            },
+            model: 'eleven_multilingual_v2',
+            apiKey: '',
+            voiceId: ''
+        };
+
+        // DOM Elements
+        const scriptEditor = document.getElementById('scriptEditor');
+        const scriptPreview = document.getElementById('scriptPreview');
+        const previewContent = document.getElementById('previewContent');
+        const previewToggle = document.getElementById('previewToggle');
+        const showPreview = document.getElementById('showPreview');
+        const pauseSelect = document.getElementById('pauseSelect');
+        
+        // Control elements
+        const stabilitySlider = document.getElementById('stability');
+        const similaritySlider = document.getElementById('similarity');
+        const styleSlider = document.getElementById('style');
+        const speakerBoostCheckbox = document.getElementById('speakerBoost');
+        const modelSelect = document.getElementById('model');
+        const apiKeyInput = document.getElementById('apiKey');
+        const voiceIdInput = document.getElementById('voiceId');
+        
+        // Button elements
+        const exportBtn = document.getElementById('exportBtn');
+        const importBtn = document.getElementById('importBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const importFile = document.getElementById('importFile');
+        const generateBtn = document.getElementById('generateBtn');
+        const apiStatus = document.getElementById('apiStatus');
+        const audioContainer = document.getElementById('audioContainer');
+        const audioPlayer = document.getElementById('audioPlayer');
+        
+        let observer;
+        const tagRegex = /(\[(?:VOLUME|SPEED|PITCH|EMPHASIS|WHISPER|PAUSE)[^\]]*?\]|\[\/(?:VOLUME|SPEED|PITCH|EMPHASIS|WHISPER)\])/gi;
+
+        // Initialize the application
+        function initializeApp() {
+            updateSliderDisplay('stability', stabilitySlider.value);
+            updateSliderDisplay('similarity', similaritySlider.value);
+            updateSliderDisplay('style', styleSlider.value);
+            
+            apiKeyInput.value = currentConfig.apiKey;
+            voiceIdInput.value = currentConfig.voiceId;
+            
+            setupEventListeners();
+            loadSampleScript();
+            
+            updateApiStatus();
+        }
+
+        // Load a sample script to get users started
+        function loadSampleScript() {
+            const sampleScript = `Welcome to ElevenLabs! 
+
+This is your script editor where you can write naturally and easily control how your voice sounds.
+
+Try selecting some text and using the toolbar buttons above to make it louder, softer, faster, slower, or even [WHISPER]whispered![/WHISPER]
+
+You can also add pauses [PAUSE 1s] to make your speech sound more natural.`;
+            
+            currentConfig.script = sampleScript;
+            updateEditorFromScript();
+            generateSSML();
+        }
+
+        function createTagSpan(text) {
+            const span = document.createElement('span');
+            span.className = 'tag';
+            span.textContent = text;
+            span.contentEditable = 'false';
+            return span;
+        }
+
+        function updateEditorFromScript() {
+            observer.disconnect();
+            const parts = currentConfig.script.split(tagRegex);
+            scriptEditor.innerHTML = '';
+            const openTagsStack = [];
+
+            parts.forEach(part => {
+                if (!part) return;
+                tagRegex.lastIndex = 0;
+                if (tagRegex.test(part)) {
+                    const match = part.match(/\[(\/?)(\w+)/);
+                    const isClosing = match && match[1] === '/';
+                    const type = match ? match[2].toUpperCase() : '';
+
+                    let tagNode;
+
+                    if (type && type !== 'PAUSE') {
+                        if (!isClosing) { // Opening tag
+                            const pairId = `tag-${Date.now()}-${Math.random()}`;
+                            tagNode = createTagSpan(part);
+                            tagNode.dataset.pairId = pairId;
+                            openTagsStack.push({ type, pairId });
+                        } else { // Closing tag
+                            if (openTagsStack.length > 0 && openTagsStack[openTagsStack.length - 1].type === type) {
+                                const { pairId } = openTagsStack.pop();
+                                tagNode = createTagSpan(part);
+                                tagNode.dataset.pairId = pairId;
+                            } else { // Unmatched closing tag
+                                tagNode = createTagSpan(part);
+                            }
+                        }
+                    } else { // PAUSE or other non-paired tag
+                        tagNode = createTagSpan(part);
+                    }
+                    if(tagNode) scriptEditor.appendChild(tagNode);
+
+                } else {
+                    const textParts = part.split('\n');
+                    textParts.forEach((textPart, index) => {
+                        if (textPart) {
+                            scriptEditor.appendChild(document.createTextNode(textPart));
+                        }
+                        if (index < textParts.length - 1) {
+                            scriptEditor.appendChild(document.createElement('br'));
+                        }
+                    });
+                }
+            });
+            observer.observe(scriptEditor, { childList: true });
+        }
+        
+        function updateScriptFromEditor() {
+            let script = '';
+            scriptEditor.childNodes.forEach(node => {
+                if (node.nodeType === Node.ELEMENT_NODE && node.dataset.hidden === 'true') {
+                    return; // Skip hidden tags
+                }
+                if (node.nodeName === 'BR') {
+                    script += '\n';
+                } else {
+                    script += node.textContent;
+                }
+            });
+            currentConfig.script = script;
+            generateSSML();
+            updateApiStatus();
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.toolbar-btn').forEach(btn => {
+                btn.addEventListener('click', handleToolbarAction);
+            });
+
+            pauseSelect.addEventListener('change', handlePauseSelection);
+
+            showPreview.addEventListener('click', () => {
+                scriptPreview.style.display = 'block';
+                showPreview.style.display = 'none';
+            });
+
+            previewToggle.addEventListener('click', () => {
+                scriptPreview.style.display = 'none';
+                showPreview.style.display = 'block';
+            });
+
+            scriptEditor.addEventListener('input', updateScriptFromEditor);
+            scriptEditor.addEventListener('paste', handlePaste);
+            scriptEditor.addEventListener('copy', handleCopy);
+            
+            observer = new MutationObserver(handleEditorMutation);
+            observer.observe(scriptEditor, { childList: true });
+
+            stabilitySlider.addEventListener('input', (e) => updateSliderDisplay('stability', e.target.value));
+            similaritySlider.addEventListener('input', (e) => updateSliderDisplay('similarity', e.target.value));
+            styleSlider.addEventListener('input', (e) => updateSliderDisplay('style', e.target.value));
+            speakerBoostCheckbox.addEventListener('change', (e) => { currentConfig.voiceSettings.use_speaker_boost = e.target.checked; });
+            modelSelect.addEventListener('change', (e) => { currentConfig.model = e.target.value; });
+            apiKeyInput.addEventListener('input', (e) => { currentConfig.apiKey = e.target.value; updateApiStatus(); });
+            voiceIdInput.addEventListener('input', (e) => { currentConfig.voiceId = e.target.value; updateApiStatus(); });
+
+            exportBtn.addEventListener('click', exportProject);
+            importBtn.addEventListener('click', () => importFile.click());
+            clearBtn.addEventListener('click', clearAll);
+            importFile.addEventListener('change', importProject);
+            generateBtn.addEventListener('click', generateAudio);
+        }
+
+        function handleToolbarAction(e) {
+            const action = e.currentTarget.dataset.action;
+            const value = e.currentTarget.dataset.value;
+            applyFormatting(action, value);
+        }
+
+        function handlePauseSelection(e) {
+            const selectedValue = e.target.value;
+            if (!selectedValue) return;
+
+            const insertPauseTag = (duration, toastMessage) => {
+                const selection = window.getSelection();
+                if (!selection.rangeCount) return;
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+
+                const pauseText = ` [PAUSE ${duration}] `;
+                const pauseNode = createTagSpan(pauseText);
+                range.insertNode(pauseNode);
+
+                range.setStartAfter(pauseNode);
+                range.setEndAfter(pauseNode);
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                updateScriptFromEditor();
+                showToast(toastMessage, 'success');
+            };
+
+            if (selectedValue === 'custom') {
+                const duration = prompt("Enter pause duration in seconds (e.g., 1.5):", "1.5");
+                if (duration !== null) {
+                    const parsedDuration = parseFloat(duration);
+                    if (!isNaN(parsedDuration) && parsedDuration > 0) {
+                        insertPauseTag(`${parsedDuration}s`, `Added custom ${parsedDuration}s pause!`);
+                    } else {
+                        showToast('Invalid duration. Please enter a positive number.', 'error');
+                    }
+                }
+            } else {
+                insertPauseTag(selectedValue, `Added ${e.target.options[e.target.selectedIndex].text} pause!`);
+            }
+            e.target.value = '';
+        }
+
+        function applyFormatting(action, value) {
+            const selection = window.getSelection();
+            if (selection.rangeCount === 0 || selection.isCollapsed) {
+                showToast('Please select some text first!', 'error');
+                return;
+            }
+            
+            const range = selection.getRangeAt(0);
+            
+            let startTagText, endTagText;
+            const upperAction = action.toUpperCase();
+
+            switch(action) {
+                case 'emphasis':
+                case 'whisper':
+                    startTagText = `[${upperAction}]`;
+                    endTagText = `[/${upperAction}]`;
+                    break;
+                case 'volume':
+                case 'speed':
+                case 'pitch':
+                    startTagText = `[${upperAction} ${value}]`;
+                    endTagText = `[/${upperAction}]`;
+                    break;
+                default: return;
+            }
+
+            const uniqueId = `tag-${Date.now()}-${Math.random()}`;
+
+            const startNode = createTagSpan(startTagText);
+            startNode.dataset.pairId = uniqueId;
+
+            const endNode = createTagSpan(endTagText);
+            endNode.dataset.pairId = uniqueId;
+
+            const selectedContents = range.extractContents();
+
+            range.insertNode(endNode);
+            range.insertNode(selectedContents);
+            range.insertNode(startNode);
+            
+            selection.removeAllRanges();
+            updateScriptFromEditor();
+            showToast(`Applied ${action} formatting!`, 'success');
+        }
+        
+        function handleCopy(event) {
+            const selection = window.getSelection();
+            if (selection.isCollapsed) return;
+            
+            event.preventDefault();
+            const range = selection.getRangeAt(0);
+            const selectedFragment = range.cloneContents();
+            let textToCopy = '';
+
+            selectedFragment.childNodes.forEach(node => {
+                 if (node.nodeName === 'BR') {
+                    textToCopy += '\n';
+                } else {
+                    textToCopy += node.textContent;
+                }
+            });
+            
+            event.clipboardData.setData('text/plain', textToCopy);
+        }
+
+        function handlePaste(event) {
+            event.preventDefault();
+            const pasteText = (event.clipboardData || window.clipboardData).getData('text/plain');
+            if (!pasteText) return;
+
+            const fragment = document.createDocumentFragment();
+            const parts = pasteText.split(tagRegex);
+
+            parts.forEach(part => {
+                if (!part) return;
+                tagRegex.lastIndex = 0;
+                if (tagRegex.test(part)) {
+                    fragment.appendChild(createTagSpan(part));
+                } else {
+                     const textParts = part.split('\n');
+                    textParts.forEach((textPart, index) => {
+                        if (textPart) {
+                            fragment.appendChild(document.createTextNode(textPart));
+                        }
+                        if (index < textParts.length - 1) {
+                            fragment.appendChild(document.createElement('br'));
+                        }
+                    });
+                }
+            });
+
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+            const range = selection.getRangeAt(0);
+            range.deleteContents();
+            
+            const lastNode = fragment.lastChild;
+            range.insertNode(fragment);
+            
+            if (lastNode) {
+                const newRange = document.createRange();
+                newRange.setStartAfter(lastNode);
+                newRange.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+            }
+            updateScriptFromEditor();
+        }
+
+        function generateSSML() {
+            let ssml = currentConfig.script;
+            ssml = ssml.replace(/\[VOLUME (soft|medium|loud)\]([\s\S]*?)\[\/VOLUME\]/gi, '<prosody volume="$1">$2</prosody>');
+            ssml = ssml.replace(/\[SPEED (x-slow|slow|medium|fast)\]([\s\S]*?)\[\/SPEED\]/gi, '<prosody rate="$1">$2</prosody>');
+            ssml = ssml.replace(/\[PITCH ([+-]?\d+%?)\]([\s\S]*?)\[\/PITCH\]/gi, '<prosody pitch="$1">$2</prosody>');
+            ssml = ssml.replace(/\[EMPHASIS\]([\s\S]*?)\[\/EMPHASIS\]/gi, '<emphasis level="strong">$1</emphasis>');
+            ssml = ssml.replace(/\[WHISPER\]([\s\S]*?)\[\/WHISPER\]/gi, '<amazon:effect name="whispered">$1</amazon:effect>');
+            ssml = ssml.replace(/\[PAUSE\s+([^\]]+)\]/gi, '<break time="$1"/>');
+            
+            currentConfig.ssmlScript = ssml;
+            previewContent.textContent = ssml;
+        }
+
+        function updateSliderDisplay(type, value) {
+            const displayElement = document.getElementById(type + 'Value');
+            displayElement.textContent = parseFloat(value).toFixed(2);
+            currentConfig.voiceSettings[type === 'similarity' ? 'similarity_boost' : type] = parseFloat(value);
+        }
+
+        function updateApiStatus() {
+            const isConnected = currentConfig.apiKey && currentConfig.voiceId;
+            generateBtn.disabled = !isConnected || !currentConfig.script.trim();
+            
+            if (isConnected) {
+                apiStatus.className = 'status-indicator status-connected';
+                apiStatus.innerHTML = '✅ API Connected';
+            } else {
+                apiStatus.className = 'status-indicator status-disconnected';
+                apiStatus.innerHTML = '❌ API Not Connected';
+            }
+        }
+
+        function exportProject() {
+            const exportData = {
+                script: currentConfig.script,
+                voiceSettings: currentConfig.voiceSettings,
+                model: currentConfig.model,
+                apiKey: currentConfig.apiKey,
+                voiceId: currentConfig.voiceId,
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `elevenlabs-project-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('Project exported successfully!', 'success');
+        }
+
+        function importProject(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedData = JSON.parse(event.target.result);
+                    loadConfiguration(importedData);
+                    showToast('Project imported successfully!', 'success');
+                } catch (error) {
+                    showToast('Error importing project: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function loadConfiguration(config) {
+            if (config.script) {
+                currentConfig.script = config.script;
+                updateEditorFromScript();
+                generateSSML();
+            }
+            
+            if (config.voiceSettings) {
+                stabilitySlider.value = config.voiceSettings.stability || 0.5;
+                similaritySlider.value = config.voiceSettings.similarity_boost || 0.75;
+                styleSlider.value = config.voiceSettings.style || 0.5;
+                speakerBoostCheckbox.checked = config.voiceSettings.use_speaker_boost !== false;
+                
+                updateSliderDisplay('stability', stabilitySlider.value);
+                updateSliderDisplay('similarity', similaritySlider.value);
+                updateSliderDisplay('style', styleSlider.value);
+                currentConfig.voiceSettings.use_speaker_boost = speakerBoostCheckbox.checked;
+            }
+            
+            if (config.model) {
+                modelSelect.value = config.model;
+                currentConfig.model = config.model;
+            }
+            
+            if (config.apiKey) {
+                apiKeyInput.value = config.apiKey;
+                currentConfig.apiKey = config.apiKey;
+            }
+            
+            if (config.voiceId) {
+                voiceIdInput.value = config.voiceId;
+                currentConfig.voiceId = config.voiceId;
+            }
+            
+            updateApiStatus();
+        }
+
+        function clearAll() {
+            if (confirm('Are you sure you want to clear everything? This cannot be undone.')) {
+                currentConfig.script = '';
+                currentConfig.ssmlScript = '';
+                updateEditorFromScript();
+                generateSSML();
+                updateApiStatus();
+                showToast('Script cleared!', 'success');
+            }
+        }
+
+        async function generateAudio() {
+            if (!currentConfig.apiKey || !currentConfig.voiceId || !currentConfig.script.trim()) {
+                showToast('Please provide API key, Voice ID, and script', 'error');
+                return;
+            }
+
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<div class="loading"><div class="spinner"></div>Generating Audio...</div>';
+
+            try {
+                const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${currentConfig.voiceId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'audio/mpeg',
+                        'Content-Type': 'application/json',
+                        'xi-api-key': currentConfig.apiKey
+                    },
+                    body: JSON.stringify({
+                        text: currentConfig.ssmlScript || currentConfig.script,
+                        model_id: currentConfig.model,
+                        voice_settings: currentConfig.voiceSettings
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail?.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                
+                audioPlayer.src = audioUrl;
+                audioContainer.style.display = 'block';
+                
+                showToast('🎉 Audio generated successfully!', 'success');
+            } catch (error) {
+                showToast('Error generating audio: ' + error.message, 'error');
+                console.error('Audio generation error:', error);
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '🎵 Generate Audio';
+                updateApiStatus();
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(toast)) {
+                        document.body.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        function handleEditorMutation(mutationsList) {
+            observer.disconnect(); // Stop observing to prevent feedback loops
+
+            for (const mutation of mutationsList) {
+                // When a tag is removed (e.g., by backspace), hide its partner
+                mutation.removedNodes.forEach(node => {
+                    if (node.nodeType === Node.ELEMENT_NODE && node.dataset.pairId) {
+                        const partner = scriptEditor.querySelector(`.tag[data-pair-id='${node.dataset.pairId}']:not([data-hidden='true'])`);
+                        if (partner) {
+                            partner.style.display = 'none';
+                            partner.dataset.hidden = 'true';
+                        }
+                    }
+                });
+
+                // When a tag is added (e.g., by undo), unhide its partner
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === Node.ELEMENT_NODE && node.dataset.pairId) {
+                        const partner = scriptEditor.querySelector(`.tag[data-pair-id='${node.dataset.pairId}'][data-hidden='true']`);
+                        if (partner) {
+                            partner.style.display = 'inline-block';
+                            delete partner.dataset.hidden;
+                        }
+                    }
+                });
+            }
+            
+            observer.observe(scriptEditor, { childList: true });
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>
+
