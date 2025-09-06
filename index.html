@@ -692,6 +692,10 @@
 
                 <div id="audioContainer" style="display: none;">
                     <audio id="audioPlayer" class="audio-player" controls></audio>
+                    <div class="button-group" style="margin-top: 15px;">
+                        <!-- <button id="shareBtn" class="btn btn-success">🔗 Share Audio Link</button> -->
+                        <button id="downloadBtn" class="btn btn-secondary">📥 Download Audio</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -741,8 +745,11 @@
         const audioContainer = document.getElementById('audioContainer');
         const audioPlayer = document.getElementById('audioPlayer');
         const copySmmlBtn = document.getElementById('copySmmlBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
         
         let observer;
+        let generatedAudioBlob = null;
         const tagRegex = /(\[(?:VOLUME|SPEED|PITCH|EMPHASIS|WHISPER|PAUSE)[^\]]*?\]|\[\/(?:VOLUME|SPEED|PITCH|EMPHASIS|WHISPER)\])/gi;
 
         // Initialize the application
@@ -890,6 +897,8 @@ You can also add pauses [PAUSE 1s] to make your speech sound more natural.`;
             importFile.addEventListener('change', importProject);
             generateBtn.addEventListener('click', generateAudio);
             copySmmlBtn.addEventListener('click', copySmmlToClipboard);
+            shareBtn.addEventListener('click', shareAudio);
+            downloadBtn.addEventListener('click', downloadAudio);
         }
 
         function handleToolbarAction(e) {
@@ -1060,37 +1069,89 @@ You can also add pauses [PAUSE 1s] to make your speech sound more natural.`;
             previewContent.textContent = ssml;
         }
 
-        function copySmmlToClipboard() {
-            if (!currentConfig.ssmlScript) {
-                showToast('No SSML code to copy!', 'error');
-                return;
-            }
+        function copyToClipboard(text, successMessage) {
             const textArea = document.createElement('textarea');
-            textArea.value = currentConfig.ssmlScript;
+            textArea.value = text;
             textArea.style.position = 'fixed';
-            textArea.style.top = 0;
-            textArea.style.left = 0;
-            textArea.style.width = '2em';
-            textArea.style.height = '2em';
-            textArea.style.padding = 0;
-            textArea.style.border = 'none';
-            textArea.style.outline = 'none';
-            textArea.style.boxShadow = 'none';
-            textArea.style.background = 'transparent';
+            textArea.style.top = '-9999px';
             document.body.appendChild(textArea);
             textArea.focus();
             textArea.select();
             try {
                 const successful = document.execCommand('copy');
                 if (successful) {
-                    showToast('SSML code copied to clipboard!', 'success');
+                    showToast(successMessage, 'success');
                 } else {
-                    showToast('Failed to copy SSML code.', 'error');
+                    showToast('Failed to copy text.', 'error');
                 }
             } catch (err) {
-                showToast('Error copying SSML code.', 'error');
+                showToast('Error copying text.', 'error');
             }
             document.body.removeChild(textArea);
+        }
+
+        function copySmmlToClipboard() {
+            if (!currentConfig.ssmlScript) {
+                showToast('No SSML code to copy!', 'error');
+                return;
+            }
+            copyToClipboard(currentConfig.ssmlScript, 'SSML code copied to clipboard!');
+        }
+
+        async function shareAudio() {
+            if (!generatedAudioBlob) {
+                showToast('No audio to share. Please generate first.', 'error');
+                return;
+            }
+
+            shareBtn.disabled = true;
+            shareBtn.innerHTML = '<div class="loading"><div class="spinner"></div>Uploading...</div>';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', generatedAudioBlob, 'ssml-audio.mp3');
+
+                const response = await fetch('https://file.io', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Upload failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    copyToClipboard(result.link, 'Share link copied to clipboard!');
+                } else {
+                    throw new Error(result.message || 'Failed to get share link.');
+                }
+
+            } catch (error) {
+                showToast(`Error sharing audio: ${error.message}`, 'error');
+                console.error('Sharing error:', error);
+            } finally {
+                shareBtn.disabled = false;
+                shareBtn.innerHTML = '🔗 Share Audio Link';
+            }
+        }
+
+        function downloadAudio() {
+            if (!generatedAudioBlob) {
+                showToast('No audio to download. Please generate first.', 'error');
+                return;
+            }
+            const url = URL.createObjectURL(generatedAudioBlob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `ssml-audio-${new Date().getTime()}.mp3`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showToast('Audio download started!', 'success');
         }
 
         function autoArrangeScript() {
@@ -1224,6 +1285,7 @@ You can also add pauses [PAUSE 1s] to make your speech sound more natural.`;
 
             generateBtn.disabled = true;
             generateBtn.innerHTML = '<div class="loading"><div class="spinner"></div>Generating Audio...</div>';
+            generatedAudioBlob = null; // Reset previous audio
 
             try {
                 const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${currentConfig.voiceId}`, {
@@ -1245,8 +1307,8 @@ You can also add pauses [PAUSE 1s] to make your speech sound more natural.`;
                     throw new Error(errorData.detail?.message || `HTTP ${response.status}: ${response.statusText}`);
                 }
 
-                const audioBlob = await response.blob();
-                const audioUrl = URL.createObjectURL(audioBlob);
+                generatedAudioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(generatedAudioBlob);
                 
                 audioPlayer.src = audioUrl;
                 audioContainer.style.display = 'block';
