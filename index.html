@@ -1057,7 +1057,7 @@ You can also add pauses [PAUSE 1s] to make your speech sound more natural.`;
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `elevenlabs-project-${new Date().toISOString().slice(0, 10)}.json`;
+            a.download = `ssml-project-${new Date().toISOString().slice(0, 10)}.json`;
             a.click();
             URL.revokeObjectURL(url);
             
